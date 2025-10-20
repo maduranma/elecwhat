@@ -34,7 +34,7 @@ function main() {
   console.log("state file", persistState.file);
 
   const state = {
-    notifPrefix: config.get("notification-prefix") ?? `WhatsApp - `,
+    notifPrefix: config.get("notification-prefix") ?? `${pkg.name} - `,
     showAtStartup: isDebug || config.get("show-at-startup", true),
     get windowBounds() {
       const bounds = persistState.get("window-bounds", { width: 1099, height: 800 });
@@ -61,7 +61,6 @@ function main() {
   const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-      title: "WhatsApp",
       webPreferences: {
         preload: path.join(import.meta.dirname, "..", "src-web", "preload.js"),
         spellcheck: config.get("spellcheck", true),
@@ -69,7 +68,6 @@ function main() {
       show: state.showAtStartup,
       autoHideMenuBar: config.get("menu-bar-auto-hide", true),
       ...state.windowBounds,
-      icon: path.join(import.meta.dirname, "..", "static", "app.png")
     });
 
     if (!config.get("menu-bar", true)) {
@@ -277,12 +275,16 @@ function main() {
           // sometimes an old icon takes time to download and arrives late
           if (img && lastFaviconUrl === newestIcon) {
             tray.setImage(img);
-            mainWindow.setIcon(img);
             let messageCount = 0;
-            if(lastFaviconUrl.startsWith('https://web.whatsapp.com/favicon/1x/f')) {
-              messageCount = parseInt(lastFaviconUrl.substring('https://web.whatsapp.com/favicon/1x/f'.length).split('/')[0]);
+            if(!lastFaviconUrl.startsWith('https://web.whatsapp.com/favicon/1x/favicon') &&
+              lastFaviconUrl.startsWith('https://web.whatsapp.com/favicon/1x/f')) {
+              messageCount =
+                parseInt(lastFaviconUrl.substring('https://web.whatsapp.com/favicon/1x/f'.length).split('/')[0]);
             }
-            app.setBadgeCount(messageCount === 0 ? null : messageCount);
+            app.setBadgeCount(messageCount); // Doesn't work on linux
+            if(os.platform() === 'linux') {
+              setBadgeViaDbus(messageCount);
+            }
           }
         }
       });
