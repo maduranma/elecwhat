@@ -34,7 +34,7 @@ function main() {
   console.log("state file", persistState.file);
 
   const state = {
-    notifPrefix: config.get("notification-prefix") ?? `${pkg.name} - `,
+    notifPrefix: config.get("notification-prefix") ?? `WhatsApp - `,
     showAtStartup: isDebug || config.get("show-at-startup", true),
     get windowBounds() {
       const bounds = persistState.get("window-bounds", { width: 1099, height: 800 });
@@ -61,6 +61,7 @@ function main() {
   const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
+      title: "WhatsApp",
       webPreferences: {
         preload: path.join(import.meta.dirname, "..", "src-web", "preload.js"),
         spellcheck: config.get("spellcheck", true),
@@ -68,6 +69,7 @@ function main() {
       show: state.showAtStartup,
       autoHideMenuBar: config.get("menu-bar-auto-hide", true),
       ...state.windowBounds,
+      icon: path.join(import.meta.dirname, "..", "static", "app.png")
     });
 
     if (!config.get("menu-bar", true)) {
@@ -194,7 +196,7 @@ function main() {
           },
         },
       ]);
-      tray.setToolTip(pkg.name);
+      tray.setToolTip("WhatsApp");
       tray.setContextMenu(trayContextMenu);
       tray.on("click", () => {
         toggleVisibility(mainWindow);
@@ -202,7 +204,7 @@ function main() {
 
       const notif = (options) => {
         const n = new Notification({
-          title: pkg.name,
+          title: "WhatsApp",
           ...options,
         });
         n.show();
@@ -275,6 +277,12 @@ function main() {
           // sometimes an old icon takes time to download and arrives late
           if (img && lastFaviconUrl === newestIcon) {
             tray.setImage(img);
+            mainWindow.setIcon(img);
+            let messageCount = 0;
+            if(lastFaviconUrl.startsWith('https://web.whatsapp.com/favicon/1x/f')) {
+              messageCount = parseInt(lastFaviconUrl.substring('https://web.whatsapp.com/favicon/1x/f'.length).split('/')[0]);
+            }
+            app.setBadgeCount(messageCount === 0 ? null : messageCount);
           }
         }
       });
@@ -320,7 +328,7 @@ function main() {
   };
 
   app.setAboutPanelOptions({
-    applicationName: pkg.name,
+    applicationName: "WhatsApp Desktop",
     applicationVersion: app.getVersion(),
     authors: [pkg?.author?.name],
     website: pkg?.homepage,
