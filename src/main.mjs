@@ -13,6 +13,7 @@ import {
   getUserIcon,
   loadTranslations,
   loadConfig,
+  setBadgeViaDbus,
 } from "./util.mjs";
 import contextMenu from "electron-context-menu";
 import { debounce } from "lodash-es";
