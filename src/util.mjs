@@ -160,7 +160,7 @@ export const setBadgeViaDbus = (number) => {
     member: "Update",
     signature: "sa{sv}",
     body: [
-      "application://" + pkg.name + ".desktop",
+      "application://WhatsApp.desktop",
       [
         ["count", ["x", number]],
         ["count-visible", ["b", number !== 0]]
