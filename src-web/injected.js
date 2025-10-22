@@ -117,7 +117,7 @@ async function ewSetup() {
 
 void ewSetup();
 
-function closeChat() {
-  closeChat.WAKeyboardRun ??= importDefault("WAWebKeyboardRun");
-  closeChat.WAKeyboardRun?.('CLOSE_CHAT');
+function ewCloseChat() {
+  ewCloseChat.WAKeyboardRun ??= importDefault("WAWebKeyboardRun");
+  ewCloseChat.WAKeyboardRun?.('CLOSE_CHAT');
 }
