@@ -93,7 +93,6 @@ export function getUserIcon(basename, state) {
 
 export async function getIcon(url, state) {
   const lastPathPart = path.basename(url);
-  console.debug("favicon", url, lastPathPart);
 
   const userIcon = getUserIcon(lastPathPart, state);
   if (userIcon) {
