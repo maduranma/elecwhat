@@ -21,7 +21,27 @@ import { debounce } from "lodash-es";
 import pkg from "../package.json" with { type: "json" };
 import * as os from "os";
 import { factory } from "electron-json-config";
-import { defaultKeys } from "./keys.mjs";
+
+const defaultKeys = {
+  "A ArrowDown": {
+    whatsappAction: "GO_TO_NEXT_CHAT",
+  },
+  "A ArrowUp": {
+    whatsappAction: "GO_TO_PREV_CHAT",
+  },
+  "C Tab": {
+    whatsappAction: "GO_TO_NEXT_CHAT",
+  },
+  "CS Tab": {
+    whatsappAction: "GO_TO_PREV_CHAT",
+  },
+  "C u": {
+    whatsappAction: "TOGGLE_UNREAD",
+  },
+  "C ArrowUp": {
+    whatsappAction: "EDIT_LAST_MESSAGE",
+  },
+};
 
 const defaultUserAgent =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -130,7 +150,6 @@ function main() {
         console.log(`close ${app.isQuiting}`);
         if (!app.isQuiting) {
           event.preventDefault();
-          mainWindow.webContents.executeJavaScript("ewCloseChat()");
           mainWindow.hide();
           // event.returnValue = false;
         }
@@ -171,9 +190,6 @@ function main() {
         console.log("stateGet", name);
         return state[name];
       });
-      ipcMain.handle("windowToggle", () => {
-        toggleVisibility(mainWindow);
-      });
 
       const trayIcon = getUserIcon("app", state) || path.join(import.meta.dirname, "..", "static", "app.png");
       const tray = new Tray(trayIcon);
@@ -195,7 +211,7 @@ function main() {
           },
         },
       ]);
-      tray.setToolTip("WhatsApp");
+      tray.setToolTip(pkg.name);
       tray.setContextMenu(trayContextMenu);
       tray.on("click", () => {
         toggleVisibility(mainWindow);
@@ -203,7 +219,7 @@ function main() {
 
       const notif = (options) => {
         const n = new Notification({
-          title: "WhatsApp",
+          title: pkg.name,
           ...options,
         });
         n.show();
@@ -319,7 +335,7 @@ function main() {
   };
 
   app.setAboutPanelOptions({
-    applicationName: "WhatsApp Desktop",
+    applicationName: pkg.name,
     applicationVersion: app.getVersion(),
     authors: [pkg?.author?.name],
     website: pkg?.homepage,
