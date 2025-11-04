@@ -13,7 +13,6 @@ import {
   getUserIcon,
   loadTranslations,
   loadConfig,
-  setBadgeViaDbus,
 } from "./util.mjs";
 import contextMenu from "electron-context-menu";
 import { debounce } from "lodash-es";
@@ -21,6 +20,7 @@ import { debounce } from "lodash-es";
 import pkg from "../package.json" with { type: "json" };
 import * as os from "os";
 import { factory } from "electron-json-config";
+import { DbusManager } from "./DbusManager.mjs";
 
 const defaultKeys = {
   "A ArrowDown": {
@@ -41,7 +41,45 @@ const defaultKeys = {
   "C ArrowUp": {
     whatsappAction: "EDIT_LAST_MESSAGE",
   },
+  "C 1": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 0
+  },
+  "C 2": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 1
+  },
+  "C 3": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 2
+  },
+  "C 4": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 3
+  },
+  "C 5": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 4
+  },
+  "C 6": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 5
+  },
+  "C 7": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 6
+  },
+  "C 8": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 7
+  },
+  "C 9": {
+    action: "OPEN_NTH_CHAT",
+    chatIndex: 8
+  },
 };
+
+const dbusManager = new DbusManager();
 
 const defaultUserAgent =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -55,7 +93,7 @@ function main() {
   console.log("state file", persistState.file);
 
   const state = {
-    notifPrefix: config.get("notification-prefix") ?? `${pkg.name} - `,
+    notifPrefix: config.get("notification-prefix") ?? `WhatsApp - `,
     showAtStartup: isDebug || config.get("show-at-startup", true),
     get windowBounds() {
       const bounds = persistState.get("window-bounds", { width: 1099, height: 800 });
@@ -82,6 +120,7 @@ function main() {
   const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
+      title: "WhatsApp",
       webPreferences: {
         preload: path.join(import.meta.dirname, "..", "src-web", "preload.js"),
         spellcheck: config.get("spellcheck", true),
@@ -89,6 +128,7 @@ function main() {
       show: state.showAtStartup,
       autoHideMenuBar: config.get("menu-bar-auto-hide", true),
       ...state.windowBounds,
+      icon: path.join(import.meta.dirname, "..", "static", "app.png")
     });
 
     if (!config.get("menu-bar", true)) {
@@ -150,6 +190,7 @@ function main() {
         console.log(`close ${app.isQuiting}`);
         if (!app.isQuiting) {
           event.preventDefault();
+          mainWindow.webContents.executeJavaScript('ewCloseChat()');
           mainWindow.hide();
           // event.returnValue = false;
         }
@@ -158,6 +199,7 @@ function main() {
 
     app.on("before-quit", function () {
       console.log("before-quit");
+      dbusManager.end();
       app.isQuiting = true;
     });
 
@@ -211,7 +253,7 @@ function main() {
           },
         },
       ]);
-      tray.setToolTip(pkg.name);
+      tray.setToolTip("WhatsApp");
       tray.setContextMenu(trayContextMenu);
       tray.on("click", () => {
         toggleVisibility(mainWindow);
@@ -219,7 +261,7 @@ function main() {
 
       const notif = (options) => {
         const n = new Notification({
-          title: pkg.name,
+          title: "WhatsApp",
           ...options,
         });
         n.show();
@@ -299,9 +341,7 @@ function main() {
                 parseInt(lastFaviconUrl.substring('https://web.whatsapp.com/favicon/1x/f'.length).split('/')[0]);
             }
             app.setBadgeCount(messageCount); // Doesn't work on linux
-            if(os.platform() === 'linux') {
-              setBadgeViaDbus(messageCount);
-            }
+            dbusManager.setBadgeCount(messageCount); // Only works on linux
           }
         }
       });
@@ -335,7 +375,7 @@ function main() {
   };
 
   app.setAboutPanelOptions({
-    applicationName: pkg.name,
+    applicationName: "WhatsApp Desktop",
     applicationVersion: app.getVersion(),
     authors: [pkg?.author?.name],
     website: pkg?.homepage,
